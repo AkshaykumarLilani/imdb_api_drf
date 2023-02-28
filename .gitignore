@@ -1,0 +1,13 @@
+media/
+staticfiles/
+logs/
+!.gitkeep
+mediorigin/settings.ini
+**/__pycache__/**
+**/migrations/**
+!**/migrations/__init__.py
+venv/
+logs/
+!**/.gitkeep
+tmp/**
+.vscode/
