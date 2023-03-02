@@ -1,69 +1,39 @@
 from rest_framework import serializers
-from watchlist_app.models import Movie
+from watchlist_app.models import WatchList, StreamPlatforms, Review
 
-# 3. validators
-def name_length(value):
-    if len(value) < 2:
-        raise serializers.ValidationError("Name is too short")
-    else:
-        return value
-    
-# class MovieSerializer(serializers.Serializer):
-#     id = serializers.IntegerField(read_only=True)
-#     name = serializers.CharField(validators=[name_length])
-#     description = serializers.CharField()
-#     active = serializers.BooleanField()
-        
-    
-#     def create(self, validated_data):
-#         # this return is accessed in serializer.data when serializer.is_valid() returns True in the views
-#         return Movie.objects.create(**validated_data)
-    
-#     #instance carries the old values and validated_data carries the new values
-#     def update(self, instance, validated_data):
-#         # you have to match all the fields in the validated data with instance and see how the data is accessed from validated_data (we are giving a else field to return if the data is not present in the validated data (instance.name, etc.)).
-#         instance.name = validated_data.get('name', instance.name)
-#         instance.description = validated_data.get('description', instance.description)
-#         instance.active = validated_data.get('active', instance.active)
-#         # save it once you have updated all the fields.
-#         instance.save()
-#         #return the new data to the view
-#         return instance
-
-#     # 1. Field level validation.
-#     # def validate_name(self, value):
-#     #     if len(value) < 2:
-#     #         raise serializers.ValidationError("Name is too short")
-#     #     else:
-#     #         return value
-    
-#     # 2. object level validation.
-#     def validate(self, data):
-#         if data["name"] == data["description"]:
-#             raise serializers.ValidationError("Name and description cannot be the same")
-#         return data
-
-class MovieSerializer(serializers.ModelSerializer):
-    name_len = serializers.SerializerMethodField()
+class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Movie
+        model = Review
+        fields = '__all__'
+class WatchListSerializer(serializers.ModelSerializer):
+    reviews = ReviewSerializer(many=True, read_only=True)
+    # what read_only = True means | when i am sending a post request, i am not going to send review. we can only get it when getting it.
+    
+    class Meta:
+        model = WatchList
         fields = '__all__'
         # fields = ['id','name','description'] # show name, id and description field
 		# exclude = ['name'] # show all excluding name
-  
-    def get_name_len(self, object):
-        length = len(object.name)
-        return length
 
-    # 1. Field level validation.
-    def validate_name(self, value):
-        if len(value) < 2:
-            raise serializers.ValidationError("Name is too short")
-        else:
-            return value
+class StreamPlatformsSerializer(serializers.ModelSerializer):
+    # following will give you all the fields from watchlist
+    watchlist = WatchListSerializer(many=True, read_only=True)
     
-    # 2. object level validation.
-    def validate(self, data):
-        if data["name"] == data["description"]:
-            raise serializers.ValidationError("Name and description cannot be the same")
-        return data
+    # if you want only the field which is returned by __str__ method of the model
+    # watchlist = serializers.StringRelatedField(many=True)
+    
+    # name should be sufficient to explain
+    # watchlist = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    
+    # now if you want a hyperlink to the related fields than use following.
+    # important thing is the view_name field, it has to be same as the view_name which you provide in the urls to which you want this link to.
+    # you will also have to add context={'request': request} in the serializer call of get request in the StreamPlatformListAV view.
+    # *** following is throwing an error
+    # watchlist = serializers.HyperlinkedRelatedField(
+    #     many=True,
+    #     read_only=True,
+    #     view_name='watchlist-details'
+    # )
+    class Meta:
+        model = StreamPlatforms
+        fields = '__all__'
