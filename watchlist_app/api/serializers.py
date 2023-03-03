@@ -4,7 +4,8 @@ from watchlist_app.models import WatchList, StreamPlatforms, Review
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = '__all__'
+        # fields = '__all__'
+        exclude  =('watchlist',)
 class WatchListSerializer(serializers.ModelSerializer):
     reviews = ReviewSerializer(many=True, read_only=True)
     # what read_only = True means | when i am sending a post request, i am not going to send review. we can only get it when getting it.

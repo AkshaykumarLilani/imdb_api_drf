@@ -4,24 +4,47 @@ from rest_framework import status
 from rest_framework.views import APIView
 from watchlist_app.models import WatchList, StreamPlatforms, Review
 from .serializers import WatchListSerializer, StreamPlatformsSerializer, ReviewSerializer
-from rest_framework import mixins, generics
+# from rest_framework import mixins
+from rest_framework import generics
 
-class ReviewDetailGv(mixins.RetrieveModelMixin, generics.GenericAPIView):
-    queryset = Review.objects.all()
+class ReviewCreate(generics.CreateAPIView):
     serializer_class = ReviewSerializer
     
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+    def perform_create(self, serializer):
+        pk = self.kwargs['pk']
+        watchlist = WatchList.objects.get(pk=pk)
+        
+        serializer.save(watchlist=watchlist)
 
-class ReviewListGv(mixins.CreateModelMixin, mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = Review.objects.all()
+class ReviewList(generics.ListAPIView):
+    # queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        return Review.objects.filter(watchlist=pk)
     
-    def update(self, request, *args, **kwargs):
-         return self().create(request, *args, **kwargs)
+
+class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+# class ReviewDetailGv(mixins.RetrieveModelMixin, generics.GenericAPIView):
+#     queryset = Review.objects.all()
+#     serializer_class = ReviewSerializer
+    
+#     def get(self, request, *args, **kwargs):
+#         return self.retrieve(request, *args, **kwargs)
+
+# class ReviewListGv(mixins.CreateModelMixin, mixins.ListModelMixin, generics.GenericAPIView):
+#     queryset = Review.objects.all()
+#     serializer_class = ReviewSerializer
+    
+#     def get(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
+    
+#     def update(self, request, *args, **kwargs):
+#          return self().create(request, *args, **kwargs)
 
 class WatchListAV(APIView):
         
