@@ -1,20 +1,51 @@
 from rest_framework.response import Response
 from rest_framework import status
-# from rest_framework.decorators import api_view
+from rest_framework import generics, viewsets
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
+# from rest_framework.decorators import api_view
+
+from django.shortcuts import get_object_or_404
+
 from watchlist_app.models import WatchList, StreamPlatforms, Review
 from .serializers import WatchListSerializer, StreamPlatformsSerializer, ReviewSerializer
 # from rest_framework import mixins
-from rest_framework import generics
+
+class StreamPlatformVs(viewsets.ModelViewSet):
+    queryset = StreamPlatforms.objects.all()
+    serializer_class = StreamPlatformsSerializer
+    
+# class StreamPlatformVs(viewsets.ViewSet):
+    
+#     def list(self, request):
+#         queryset = StreamPlatforms.objects.all()
+#         serializer = StreamPlatformsSerializer(queryset, many=True)
+#         return Response(serializer.data)
+
+#     def retrieve(self, request, pk=None):
+#         queryset = StreamPlatforms.objects.all()
+#         watchlist = get_object_or_404(queryset, pk=pk)
+#         serializer = StreamPlatformsSerializer(watchlist)
+#         return Response(serializer.data)
 
 class ReviewCreate(generics.CreateAPIView):
     serializer_class = ReviewSerializer
+    
+    def get_queryset(self):
+        return Review.objects.all()
     
     def perform_create(self, serializer):
         pk = self.kwargs['pk']
         watchlist = WatchList.objects.get(pk=pk)
         
-        serializer.save(watchlist=watchlist)
+        print(self.request)
+        review_user_ = self.request.user
+        review_queryset = Review.objects.filter(watchlist=watchlist, review_user=review_user_)
+        
+        if review_queryset.exists():
+            raise ValidationError("You have already reviewed this watchlist")
+        
+        serializer.save(watchlist=watchlist, review_user=review_user_)
 
 class ReviewList(generics.ListAPIView):
     # queryset = Review.objects.all()
